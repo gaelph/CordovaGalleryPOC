@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: RequestQueue.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: RequestQueue.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by gaelph on 04/05/2017.
+ */
+
+/**
+ * Classe permettant de gérer une file d'attente de requêtes
+ * Implémente le pattern Singleton pour garantir l'unicité de la file d'attente
+ * @constructor
+ * @requires Request
+ */
+function RequestQueue () {
+
+    // Pattern Singleton
+    if (RequestQueue._instance) {
+        return RequestQueue._instance;
+    }
+    RequestQueue._instance = this;
+
+    /**
+     * Une Collection (voir Dexie) contenant les requêtes en attente
+     * @type {Collection}
+     */
+    this.queue = [];
+
+    // On récupère toutes les requêtes en attente
+    this._getAllRequestsFromDB = function () {
+        Request.objects.all().then(function (result) {
+            RequestQueue._instance.queue = result;
+        });
+    };
+    this._getAllRequestsFromDB();
+
+    /**
+     * Ajoute une requête à la file d'attente
+     * La requête est stockée dans la base, la liste est rechagée
+     * @param {Request} request
+     * @todo déterminer si maintenir un copie de la collection en permanance en mémoire est pertinent
+     */
+    this.put = function (request) {
+        console.log('Queued request : ' + request.method + ' ' + request.url);
+        request.save();
+        this._getAllRequestsFromDB();
+    };
+
+    /**
+     * Envoie toutes les requêtes en attente
+     */
+    this.sendAllPending = function () {
+        // 2numération de la collection
+        this.queue.each(function (request) {
+            var rest = new REST(); // L'objet de connextion au serveur
+
+            // Lancement de la requête
+            console.log("Sending pending : " + request.method + ' ' + request.url);
+            rest[request.method](request.url, request.body)
+                .catch(function (xhr) { // Échec de la requête
+                    // Affichage d'une erreur
+                    document.getElementById('camera-error').innerHTML = xhr.responseText;
+                });
+        }).then(function () { // À la fin de l'énumération
+            RequestQueue._instance.queue.delete() // On supprime toutes les requêtes, echec ou non
+                .then(function () {
+                    // On recharge la page pour refléter les cas de succès et d'échec
+                    //window.location.reload();
+                })
+                .catch(function (error) {
+                    // Erreur à la suppression
+                    console.error(error.failures);
+                    //window.location.reload();
+                });
+        })
+    };
+
+    // Écoute les événements liés à la connexion
+    // FF, CHROME, OPERA
+    window.addEventListener('online', function () {
+        console.log('sending all pending requests');
+        RequestQueue.getInstance().sendAllPending();
+    });
+
+    // IE
+    document.body.addEventListener('online', function () {
+        console.log('sending all pending requests');
+        RequestQueue.getInstance().sendAllPending();
+    });
+}
+
+/**
+ * Méthode à utiliser pour obtenir l'instance de RequestQueue
+ * @returns {RequestQueue}
+ * @static
+ */
+RequestQueue.getInstance = function () {
+    return RequestQueue._instance || new RequestQueue();
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="CameraSelector.html">CameraSelector</a></li><li><a href="GalleryView.html">GalleryView</a></li><li><a href="LocalManager.html">LocalManager</a></li><li><a href="Photo.html">Photo</a></li><li><a href="PictureGallery.html">PictureGallery</a></li><li><a href="RemoteManager.html">RemoteManager</a></li><li><a href="Request.html">Request</a></li><li><a href="RequestQueue.html">RequestQueue</a></li><li><a href="REST.html">REST</a></li></ul><h3>Events</h3><ul><li><a href="CameraSelector.html#event:photo-taken">photo-taken</a></li><li><a href="GalleryView.html#event:remove-photo-clicked">remove-photo-clicked</a></li><li><a href="PictureGallery.html#event:photo-added">photo-added</a></li><li><a href="PictureGallery.html#event:photo-removed">photo-removed</a></li></ul><h3>Interfaces</h3><ul><li><a href="Manager.html">Manager</a></li><li><a href="Model.html">Model</a></li></ul><h3>Global</h3><ul><li><a href="global.html#databaseDeclarations">databaseDeclarations</a></li><li><a href="global.html#getDexie">getDexie</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.0-dev</a> on Fri May 05 2017 20:26:06 GMT+0200 (CEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

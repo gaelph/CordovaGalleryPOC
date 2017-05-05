@@ -1,0 +1,35 @@
+{
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "source": {
+    "include": [
+      "./www/"
+    ],
+    "exclude": [
+      "./www/js/Dexie.js"
+    ],
+    "includePattern": ".+.js(doc)?$",
+    "excludePattern": "docs"
+  },
+  "plugins": [],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": true,
+    "systemName": "remoteFileExplorer",
+    "footer": "Created by Gaël PHILIPPE",
+    "copyright": "2017",
+    "navType": "vertical",
+    "theme": "spacelab",
+    "linenums": true,
+    "collapseSymbols": true,
+    "inverseNav": false
+  },
+  "opts": {
+    "template": "/Users/gaelph/jsdoc/templates/default/",
+    "encoding": "utf8",
+    "destination": "docs/js",
+    "recurse": true,
+    "private": true
+  }
+}

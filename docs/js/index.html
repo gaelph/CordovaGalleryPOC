@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Preuve de concept CORDOVA &amp; ONLINE/OFFLINE</h1><p>Ce projet se concentre sur trois fonctionnalités:</p>
+<ol>
+<li>L'aquisition d'images dans Cordova,</li>
+<li>La communication avec un serveur (API REST),</li>
+<li>la gestion de perte de connexion.</li>
+</ol>
+<h2>Acquisition d'images</h2><h3>La classe CameraSelector</h3><p>Cette classe permet de récupérer des images depuis un appareil (navigateur, téléphone).
+Elle attend deux éléments dans le DOM :</p>
+<ul>
+<li><code>#select-image-btn</code>: un bouton qui, quand il est cliqué, permet à l'utilisateur de choisir une image déjà prise</li>
+<li><code>#tak-image-btn</code>: un bouton qui, quand il est cliqué, déclanche une prise de vue (appareil photo ou webcam)</li>
+</ul>
+<p>Quand une image est prise, l'événement <code>photo-taken</code> est lancé.
+La propriété <code>detail</code> de cet événement est les données de l'image encodées en Base64.</p>
+<h2>Communication avec une API REST</h2><h3>Architecture</h3><p>Ce système s'articule autour de trois types de classes :</p>
+<ol>
+<li><strong>Les classes modèles</strong> : Implémentent l'interface <code>Model</code>.
+Chaque instance représente un enregistrement.</li>
+<li><strong>Les classes manager</strong> : Implémentent l'interface <code>Manager</code>.
+À chaque instance de <code>Model</code> est associée une instance <code>Manager</code>(propriété <code>objects</code>).
+Elles implémentent les méthodes CRUD (Create, Read, Update, Delete).</li>
+<li><strong>La classe <code>REST</code></strong> : Elle est responsable de la communication avec le serveur.</li>
+</ol>
+<h3>L'interface <code>Model</code></h3><p>Elle requiert l'implémentation de deux méthodes, <code>save()</code> et <code>delete()</code> et d'une propriété statique <code>objects</code>.</p>
+<blockquote>
+<p>Le nom choisi pour la classe qui implémente cette interface est <strong>très important</strong>.
+Il est utilisé par le <code>Manager</code> pour déterminer l'URL à laquelle envoyer les requêtes, et le nom de table de la base de données locale.</p>
+<p><code>var nomdelatable = NomDeLaTable.toLowerCase() + &quot;s&quot;;</code></p>
+<p>exemple : La classe <code>Photo</code> est associées à la table <code>photos</code>, et à l'url http://www.exemple.com/api/photos/ de l'API REST.</p>
+</blockquote>
+<p><code>Model::objects</code>: L'instance de <code>Manager</code> associée au <code>Model</code>.</p>
+<p><code>Model::save()</code>: Quand cette méthode est appelée, le <code>Manager</code> tente de persister les données. Soit par ajout, soit par mise à jour.
+On essaie d'abord via l'API REST, puis la base de données locale.</p>
+<p><code>Model::delete()</code>: Quand cette méthode est appelée, le <code>Manager</code> tente de supprimer l'enregistrement.
+On essaie d'abord via l'API REST, puis la base de données locale.</p>
+<h4>Utilistation par un Controller</h4><p>Pour récupérer tous les enregistrements de la table :</p>
+<pre class="prettyprint source lang-javascript"><code>Photo.objects.all()
+    .then(function (photos) {
+        // Faire quelque choses avec les instances de Photo
+    })
+    .catch(function (erreur) {
+        // Gérer l'erreur
+    });</code></pre><p>Pour récupérer un enregistrement particulier de la table :</p>
+<pre class="prettyprint source lang-javascript"><code>Photo.objects.get(2)
+    .then(function (photo) {
+        // Faire quelque chose avec l'instance de Photo
+    })
+    .catch(function (erreur) {
+        // Gérer l'erreur
+    });</code></pre><p>Pour persister un élément :</p>
+<pre class="prettyprint source lang-javascript"><code>var photo = new Photo(id, data);
+photo.save();</code></pre><p>Pour supprimer l'enregistrement :</p>
+<pre class="prettyprint source lang-javascript"><code>photo.delete();</code></pre><h3>Les Managers</h3><p>Il existe deux types de base héritables:</p>
+<ol>
+<li><code>RemoteManager</code> : Qui permet de communiquer avec l'API REST, ou la base de données locale quand on n'a pas de connexion,</li>
+<li><code>LocalManager</code>: Qui ne permet de communiquer qu'avec la base de données locale.</li>
+</ol>
+<p>Tous deux implémentent les mêmes méthodes <code>all()</code>, <code>get(key)</code>, <code>save(object)</code>, <code>delete(key)</code>. De ce fait, le type <em>Remote</em> ou <em>Local</em> est transparent.</p>
+<p>Tous deux prennent le constructeur de la classe <code>Model</code> qui leur est associée comme premier argument de leur constructeur.</p>
+<p>Tous deux requièrent que <code>Dexie</code> (la biliothèque qui facilite le dialogue avec la base de données locale) soit instanciée dans la variable globale <code>window.DB</code>.</p>
+<h4><code>RemoteManager</code></h4><p>Utilise à la fois l'API REST et la base de données locale. L'URL de base de l'API est le second argument de son constructeur.</p>
+<pre class="prettyprint source lang-javascript"><code> Photo.objects = new RemoteManager(Photo, 'http://www.example.com:3000/');</code></pre><p>Si on a une connexion au réseau, les données sont envoyées au serveur, en cas de succès, elles sont persistées localement.
+Dans le cas contraire, la requète est mise en file d'attente (persistée dans la table <code>requests</code>).</p>
+<h4><code>LocalManager</code></h4><p>N'utilise que la base de données locale. Ne prends que le constructeur de la classe <code>Model</code> qui lui est associée.</p>
+<pre class="prettyprint source lang-javascript"><code>Request.objects = new LocalManager(Request);</code></pre><h3>La classe <code>REST</code></h3><p>C'est elle qui dialogue avec le serveur. Elle implémente quatres méthodes :</p>
+<ul>
+<li><code>get(query)</code> : Envoie une requête <code>GET</code>, pour la lecture des données,</li>
+<li><code>put(query, object)</code> : Envoie une requête <code>PUT</code>, pour mettre à jour des données,</li>
+<li><code>post(query, object)</code> : Envoie une requête <code>POST</code>, pour créer des données,</li>
+<li><code>delete(query)</code> : Envoie une requête <code>DELETE</code>, pour supprimer des données.</li>
+</ul>
+<blockquote>
+<p>La classe attends que le serveur réponde avec du JSON. Les réponses sont parsées automatiquement à la réception.</p>
+<p>Les objets envoyés sont des chaînes JSON avec le header <code>Content-Type: application/json</code>.</p>
+</blockquote>
+<h4>Exemples</h4><p>Récupération de tous les éléments <code>Photo</code> :</p>
+<pre class="prettyprint source lang-javascript"><code>var rest = new REST('http://www.example.com:3000/api/');
+
+rest.get('photos/')
+    .then(function (photos) {
+        // faire quelque chose avec le tableau d'objets retourné
+    })
+    .catch(function (xhr, error) {
+        // Gérer l'erreur
+        // error est nul s'il s'agit d'une erreur réseau
+        // s'il n'est pas nul, il s'agit d'un problème de parsage JSON
+    });</code></pre><p>Envoi d'une photo :</p>
+<pre class="prettyprint source lang-javascript"><code>var photo = new Photo(id, data);
+var rest = new REST('http://www.example.com:3000/api/');
+
+rest.post('photos/', photo)
+    .then(function (photo) {
+        // faire quelque chose avec l'objet retourné
+    })
+    .catch(function (xhr, error) {
+        // Gérer l'erreur
+        // error est nul s'il s'agit d'une erreur réseau
+        // s'il n'est pas nul, il s'agit d'un problème de parsage JSON
+    });</code></pre><h3>La base de données locale</h3><p>La base de données locale est la base IndexedDB intégrée aux navigateurs modernes.
+La bibliothèque <a href="http://dexie.org/">Dexie</a> est utilisée pour faciliter la communication avec elle.</p>
+<h2>Gestion de perte de connexion</h2><h3>La classe <code>RequestQueue</code></h3><p>Elle est responsable de la gestion des requêtes en attente.</p>
+<blockquote>
+<p><code>RequestQueue</code> implémente le patron de conception <em>Singleton</em> pour garanttir l'unicité de la file.
+On l'utilisera donc comme suit : <code>RequestQueue.getInstance()</code>, ou <code>new RequestQueue()</code>.</p>
+</blockquote>
+<p>Les requêtes prennent la forme d'instances de la classe <code>Request</code>, qui a trois propriétés :</p>
+<ul>
+<li><code>method</code>: la méthode HTTP : <code>GET</code>, <code>PUT</code>, <code>POST</code> ou <code>DELETE</code>,</li>
+<li><code>url</code>: l'URL complète de la requête,</li>
+<li><code>body</code> : le corps de la requête pour <code>PUT</code> ou <code>POST</code>, <code>null</code> sinon.</li>
+</ul>
+<p>Pour mettre une requête en attente, on utilise la méthode <code>put(request)</code>:</p>
+<pre class="prettyprint source lang-javascript"><code>var request = new Request('GET', 'http://www.example.com:3000/api/photos/');
+RequestQueue.getInstance().put(request);</code></pre><p><code>RequestQueue</code> écoute l'événement <code>ononline</code>. Ainsi, quand on retrouvera la connexion, toutes les requêtes en attente seront envoyées.</p>
+<blockquote>
+<p>Les requêtes seront supprimées de la base de données locale que celles-ci aient réussi ou non !</p>
+</blockquote>
+<h4>Pistes de réflexion :</h4><ul>
+<li>Déplacer la responsabilité de la mise en file d'attente de la classe <code>RemoteManager</code>à la classe <code>REST</code>.</li>
+<li>Stocker les requêtes en attente dans une base de données séparée de la base de l'application, voire dans <code>localStorage</code>.</li>
+</ul>
+<h2>To Do :</h2><ul>
+<li>Ajouter un système de Timestamp pour dater les requètes en attentes</li>
+<li>Gérer la perte de connexion alors qu'une requête est déjà partie, ou sur le point de partir</li>
+<li>Ajouter un système de d'authentification au sein du client REST</li>
+<li>Ajouter une fonction de mise à jour des données en cas de migration de la base de données.</li>
+<li>Gérer le rafraîchissement de la page</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="CameraSelector.html">CameraSelector</a></li><li><a href="GalleryView.html">GalleryView</a></li><li><a href="LocalManager.html">LocalManager</a></li><li><a href="Photo.html">Photo</a></li><li><a href="PictureGallery.html">PictureGallery</a></li><li><a href="RemoteManager.html">RemoteManager</a></li><li><a href="Request.html">Request</a></li><li><a href="RequestQueue.html">RequestQueue</a></li><li><a href="REST.html">REST</a></li></ul><h3>Events</h3><ul><li><a href="CameraSelector.html#event:photo-taken">photo-taken</a></li><li><a href="GalleryView.html#event:remove-photo-clicked">remove-photo-clicked</a></li><li><a href="PictureGallery.html#event:photo-added">photo-added</a></li><li><a href="PictureGallery.html#event:photo-removed">photo-removed</a></li></ul><h3>Interfaces</h3><ul><li><a href="Manager.html">Manager</a></li><li><a href="Model.html">Model</a></li></ul><h3>Global</h3><ul><li><a href="global.html#databaseDeclarations">databaseDeclarations</a></li><li><a href="global.html#getDexie">getDexie</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.0-dev</a> on Fri May 05 2017 20:26:06 GMT+0200 (CEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

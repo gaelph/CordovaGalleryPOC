@@ -1,0 +1,29 @@
+.picture-container {
+    display: inline-block;
+    width: 128px;
+    height: 128px;
+    overflow: hidden;
+    text-align: center;
+    position: relative;
+}
+
+.picture-container img {
+    height: 128px;
+    width: auto;
+    left:50%;
+    position: relative;
+}
+
+.delete-image {
+    position: absolute;
+    top: calc(1em + 2px);
+    right: 2px;
+    display: block;
+    width: 1.6em;
+    height: 1.6em;
+    text-align: center;
+    line-height: 1.6em;
+    background-color: rgba(41, 41, 41, 0.5);
+    color: white;
+    border-radius: 50%;
+}
