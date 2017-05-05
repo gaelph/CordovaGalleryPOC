@@ -5,7 +5,7 @@ Ce projet se concentre sur trois fonctionnalités:
 2. La communication avec un serveur (API REST),
 3. la gestion de perte de connexion.
 
-[Documentation](http://gael-philippe.fr/cordova-camera-poc/docs/index.html)
+[Documentation](http://gael-philippe.fr/cordova-camera-poc/docs/js/)
 
 ## Acquisition d'images
 
