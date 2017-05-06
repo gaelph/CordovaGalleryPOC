@@ -10,12 +10,12 @@ Ce projet se concentre sur trois fonctionnalités:
 ## Acquisition d'images
 
 ### La classe CameraSelector
-Cette classe permet de récupérer des images depuis un appareil (navigateur, téléphone).
+Cette classe permet de récupérer des images depuis un appareil (navigateur, téléphone).  
 Elle attend deux éléments dans le DOM :
 - `#select-image-btn`: un bouton qui, quand il est cliqué, permet à l'utilisateur de choisir une image déjà prise
 - `#tak-image-btn`: un bouton qui, quand il est cliqué, déclanche une prise de vue (appareil photo ou webcam)
 
-Quand une image est prise, l'événement `photo-taken` est lancé.
+Quand une image est prise, l'événement `photo-taken` est lancé.  
 La propriété `detail` de cet événement est les données de l'image encodées en Base64.
 
 ## Communication avec une API REST
@@ -23,11 +23,11 @@ La propriété `detail` de cet événement est les données de l'image encodées
 ### Architecture
 Ce système s'articule autour de trois types de classes :
 
-1. **Les classes modèles** : Implémentent l'interface `Model`.
+1. **Les classes modèles** : Implémentent l'interface `Model`.  
 Chaque instance représente un enregistrement.
-2. **Les classes manager** : Implémentent l'interface `Manager`.
-À chaque instance de `Model` est associée une instance `Manager`(propriété `objects`).
-Elles implémentent les méthodes CRUD (Create, Read, Update, Delete).
+2. **Les classes manager** : Implémentent l'interface `Manager`.  
+À chaque instance de `Model` est associée une instance `Manager`(propriété `objects`).  
+Elles implémentent les méthodes CRUD (Create, Read, Update, Delete).  
 3. **La classe `REST`** : Elle est responsable de la communication avec le serveur.
 
 ### L'interface `Model`
@@ -35,9 +35,9 @@ Elle requiert l'implémentation de deux méthodes, `save()` et `delete()` et d'u
 
 >Le nom choisi pour la classe qui implémente cette interface est **très important**.
 Il est utilisé par le `Manager` pour déterminer l'URL à laquelle envoyer les requêtes, et le nom de table de la base de données locale.
-
+>
 >`var nomdelatable = NomDeLaTable.toLowerCase() + "s";`
-
+>
 > exemple : La classe `Photo` est associées à la table `photos`, et à l'url http://www.exemple.com/api/photos/ de l'API REST.
 
 `Model::objects`: L'instance de `Manager` associée au `Model`.
@@ -118,7 +118,7 @@ C'est elle qui dialogue avec le serveur. Elle implémente quatres méthodes :
 - `delete(query)` : Envoie une requête `DELETE`, pour supprimer des données.
 
 >La classe attends que le serveur réponde avec du JSON. Les réponses sont parsées automatiquement à la réception.
-
+>
 >Les objets envoyés sont des chaînes JSON avec le header `Content-Type: application/json`.
 
 #### Exemples
@@ -154,7 +154,7 @@ rest.post('photos/', photo)
 ```
 
 ### La base de données locale
-La base de données locale est la base IndexedDB intégrée aux navigateurs modernes.
+La base de données locale est la base IndexedDB intégrée aux navigateurs modernes.  
 La bibliothèque [Dexie](http://dexie.org/) est utilisée pour faciliter la communication avec elle.
 
 ## Gestion de perte de connexion
